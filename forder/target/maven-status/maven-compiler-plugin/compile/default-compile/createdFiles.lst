@@ -1,4 +1,9 @@
+com\example\game\Board.class
 com\example\PrimaryController.class
 com\example\SecondaryController.class
+com\example\game\EntropyEngine.class
 module-info.class
 com\example\App.class
+com\example\game\PatternEngine.class
+com\example\game\Player.class
+com\example\game\Cell.class
