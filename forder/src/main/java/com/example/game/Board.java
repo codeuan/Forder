@@ -1,19 +1,73 @@
 package com.example.game;
-
+import com.example.game.Cell.CellState;
 import javafx.scene.layout.GridPane;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 
 public class Board {
 
-    private final GridPane boardGrid;
+    private final GridPane boardGrid; //visual container.
     private final int boardSize;
     private final int cellSize;
 
-    private final Cell[][] cells;
+    private final Cell[][] cells; //logical version of visual container.
 
     private Cell selectedCell = null;
 
     private final Player player1;
     private final Player player2;
+
+    private final Random random = new Random();
+    private Cell currentEitherCell;
+
+    public void nextRound() {
+        resolveCurrentEither();
+        createNewEither();
+    }
+
+    private void resolveCurrentEither() {
+            if (currentEitherCell == null) {
+                return;
+            }//if no square is available, return to avoid NullPointerException
+
+            // If it is still purple, nobody claimed it.
+            if (currentEitherCell.getState() == CellState.EITHER) {
+                CellState randomColour = random.nextBoolean()
+                        ? CellState.RED
+                        : CellState.BLUE;
+
+                currentEitherCell.setState(randomColour);
+            }//set either to red or blue at random.
+
+            // Either way, that old purple square is no longer the active one.
+            currentEitherCell = null;
+        }
+
+
+    private void createNewEither() {
+        List<Cell> emptyCells = new ArrayList<>();  //store list of every empty cell.
+    //List can only store Cell objects.
+        for (int row = 0; row < cells.length; row++) {
+            for (int col = 0; col < cells[row].length; col++) {
+                Cell cell = cells[row][col];
+
+                if (cell.isEmpty()) {
+                    emptyCells.add(cell);
+                }
+            }
+        }
+
+        // No empty squares left, so no new purple square can be created.
+        if (emptyCells.isEmpty()) {
+            return;
+        }
+
+        int randomIndex = random.nextInt(emptyCells.size());
+        currentEitherCell = emptyCells.get(randomIndex);
+        currentEitherCell.setState(CellState.EITHER); //choose a random empty cell and turn it into Either.
+    }
 
     public Board(GridPane boardGrid, int boardSize, int cellSize) {
         this.boardGrid = boardGrid;
@@ -52,7 +106,7 @@ public class Board {
         }
 
         // Optional rule: players can only claim empty cells.
-        if (!cell.isEmpty()) {
+        if (!cell.isEmpty() && !cell.isEither()) {
             System.out.println("This cell is already owned.");
             return;
         }

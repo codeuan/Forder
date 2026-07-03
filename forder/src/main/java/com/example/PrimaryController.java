@@ -4,7 +4,9 @@ import java.io.IOException;
 
 import com.example.game.Board;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 
 public class PrimaryController {
@@ -19,11 +21,18 @@ public class PrimaryController {
 
 
     @FXML
-    private void initialize() {
-        board = new Board(boardGrid, BOARD_SIZE, CELL_SIZE);
+    public void initialize() {
+        Board board = new Board(boardGrid, BOARD_SIZE, CELL_SIZE);
         board.createBoard();
-    }
 
+        Platform.runLater(() -> {
+            boardGrid.getScene().setOnKeyPressed(event -> {
+                if (event.getCode() == KeyCode.SPACE) {
+                    board.nextRound();
+                }
+            });
+        });
+    }
     @FXML
     private void switchToSecondary() throws IOException {
         App.setRoot("secondary");
