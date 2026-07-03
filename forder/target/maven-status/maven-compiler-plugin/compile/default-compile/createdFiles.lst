@@ -6,4 +6,5 @@ module-info.class
 com\example\App.class
 com\example\game\PatternEngine.class
 com\example\game\Player.class
+com\example\game\Cell$CellState.class
 com\example\game\Cell.class

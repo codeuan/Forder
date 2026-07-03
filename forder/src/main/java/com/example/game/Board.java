@@ -1,9 +1,11 @@
 package com.example.game;
-import com.example.game.Cell.CellState;
-import javafx.scene.layout.GridPane;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import com.example.game.Cell.CellState;
+
+import javafx.scene.layout.GridPane;
 
 
 public class Board {
@@ -124,6 +126,8 @@ public class Board {
         cell.setOwner(currentPlayer);
         cell.select();
         selectedCell = cell;
+
+        nextRound();
 
         System.out.println("Player 1 score: " + getScore(player1));
         System.out.println("Player 2 score: " + getScore(player2));
