@@ -15,9 +15,6 @@
 
         <Label text="Forder" />
 
-        <Label fx:id="statusLabel"
-               text="Player 1's turn" />
-
         <GridPane fx:id="boardGrid"
                   alignment="CENTER" />
 

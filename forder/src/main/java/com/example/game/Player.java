@@ -1,38 +1,22 @@
 package com.example.game;
 
+import com.example.game.Cell.Direction;
+
 public class Player {
 
-    // The player's display name, e.g. "Player 1"
     private final String name;
+    private final Direction direction;
 
-    // The colour used for this player's cells.
-    // This is a CSS colour string because JavaFX styling uses CSS.
-    private final String colour;
-
-    // This controls whether the player is allowed to move right now.
-    // Only one player should have canMove = true at a time.
-    private boolean canMove;
-
-    public Player(String name, String colour, boolean canMove) {
+    public Player(String name, Direction direction) {
         this.name = name;
-        this.colour = colour;
-        this.canMove = canMove;
+        this.direction = direction;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getColour() {
-        return colour;
+    public Direction getDirection() {
+        return direction;
     }
-
-    public boolean canMove() {
-        return canMove;
-    }
-
-    public void setCanMove(boolean canMove) {
-        this.canMove = canMove;
-    }
-    
 }

@@ -1,7 +1,7 @@
 com\example\game\Board.class
 com\example\PrimaryController.class
 com\example\game\Player.class
-com\example\game\Cell$CellState.class
+com\example\game\Cell$Direction.class
 com\example\SoundManager.class
 com\example\game\EntropyEngine.class
 module-info.class

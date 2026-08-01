@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug Forder",
+            "request": "launch",
+            "mainClass": "com.example.App",
+            "cwd": "${workspaceFolder}",
+            "stepFilters": {
+                "skipClasses": [
+                    "$JDK",
+                    "$Libraries"
+                ],
+                "skipSynthetics": true,
+                "skipStaticInitializers": true,
+                "skipConstructors": false
+            }
+        }
+    ]
+}

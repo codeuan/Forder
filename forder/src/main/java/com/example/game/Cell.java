@@ -1,30 +1,32 @@
 package com.example.game;
 
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 
 public class Cell extends StackPane {
 
-    public enum CellState {
-        EMPTY,
-        RED,
-        BLUE,
-        EITHER
+    public enum Direction {
+        LEFT,
+        RIGHT
     }
 
     private final int row;
     private final int col;
 
-    private CellState state = CellState.EMPTY;
-    private Player owner = null;
+    private Direction direction;
 
-    private boolean selected = false;
+    private final Label label = new Label();
 
-    public Cell(int row, int col, int size) {
+    public Cell(int row, int col, int size, Direction direction) {
         this.row = row;
         this.col = col;
+        this.direction = direction;
 
         setPrefSize(size, size);
-        updateStyle();
+
+        getChildren().add(label);
+
+        updateDisplay();
     }
 
     public int getRow() {
@@ -35,83 +37,43 @@ public class Cell extends StackPane {
         return col;
     }
 
-    public CellState getState() {
-        return state;
+    public Direction getDirection() {
+        return direction;
     }
 
-    public void setState(CellState state) {
-        this.state = state;
+    public void setDirection(Direction direction) {
+        this.direction = direction;
+        updateDisplay();
+    }
 
-        // Empty and Either cells do not belong to a player.
-        if (state == CellState.EMPTY || state == CellState.EITHER) {
-            owner = null;
+    public void flip() {
+        if (direction == Direction.LEFT) {
+            direction = Direction.RIGHT;
+        } else {
+            direction = Direction.LEFT;
         }
 
-        updateStyle();
+        updateDisplay();
     }
 
-    public boolean isEmpty() {
-        return state == CellState.EMPTY;
-    }
+    private void updateDisplay() {
 
-    public boolean isEither() {
-        return state == CellState.EITHER;
-    }
-
-    public Player getOwner() {
-        return owner;
-    }
-
-    public void setOwner(Player player) {
-        this.owner = player;
-
-        if (player.getColour().equals("red")) {
-            state = CellState.RED;
-        } else if (player.getColour().equals("blue")) {
-            state = CellState.BLUE;
+        if (direction == Direction.RIGHT) {
+            label.setText("R");
+        } else {
+            label.setText("L");
         }
 
-        updateStyle();
-    }
-
-    public void select() {
-        selected = true;
-        updateStyle();
-    }
-
-    public void deselect() {
-        selected = false;
-        updateStyle();
-    }
-
-    private void updateStyle() {
-        String backgroundColour;
-
-        switch (state) {
-            case RED:
-                backgroundColour = "red";
-                break;
-
-            case BLUE:
-                backgroundColour = "blue";
-                break;
-
-            case EITHER:
-                backgroundColour = "purple";
-                break;
-
-            case EMPTY:
-            default:
-                backgroundColour = "white";
-                break;
-        }
-
-        String borderWidth = selected ? "4" : "1";
+        label.setStyle(
+            "-fx-text-fill: white;" +
+            "-fx-font-size: 30px;" +
+            "-fx-font-weight: bold;"
+        );
 
         setStyle(
-            "-fx-border-color: black;" +
-            "-fx-border-width: " + borderWidth + ";" +
-            "-fx-background-color: " + backgroundColour + ";"
+            "-fx-background-color: #111111;" +
+            "-fx-border-color: white;" +
+            "-fx-border-width: 1;"
         );
     }
 }
