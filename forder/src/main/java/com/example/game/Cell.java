@@ -58,10 +58,14 @@ public class Cell extends StackPane {
 
     private void updateDisplay() {
 
+        String backgroundColour;
+
         if (direction == Direction.RIGHT) {
             label.setText("R");
+            backgroundColour = "red";
         } else {
             label.setText("L");
+            backgroundColour = "blue";
         }
 
         label.setStyle(
@@ -71,7 +75,7 @@ public class Cell extends StackPane {
         );
 
         setStyle(
-            "-fx-background-color: #111111;" +
+            "-fx-background-color: " + backgroundColour + ";" +
             "-fx-border-color: white;" +
             "-fx-border-width: 1;"
         );
