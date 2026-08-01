@@ -6,18 +6,33 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.GridPane?>
 
-<VBox alignment="CENTER" spacing="20.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.PrimaryController">
-   <children>
-    <Label text="Forder" />
+<VBox alignment="CENTER" spacing="20.0"
+      xmlns="http://javafx.com/javafx/8.0.171"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.example.PrimaryController">
 
-    <GridPane fx:id="boardGrid"
-              alignment="CENTER" />
+    <children>
 
-    <Button fx:id="primaryButton"
-            text="Switch to Secondary View"
-            onAction="#switchToSecondary" />
-   </children>
-   <padding>
-      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-   </padding>
+        <Label text="Forder" />
+
+        <Label fx:id="statusLabel"
+               text="Player 1's turn" />
+
+        <GridPane fx:id="boardGrid"
+                  alignment="CENTER" />
+
+        <Button fx:id="playAgainButton"
+                text="Play Again"
+                visible="false"
+                managed="false" />
+
+
+    </children>
+
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+
+   
+
 </VBox>
