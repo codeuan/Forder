@@ -1,21 +1,21 @@
 package com.example.game;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Tracks the actual sequence of whole-board states seen in one Forder game.
  *
- * Important rule represented here:
- * - a cell MAY be flipped more than once;
- * - a whole board configuration may NOT be repeated.
+ * A cell may be flipped more than once, but a complete board position may not
+ * be repeated.
  */
 public final class ForderHistory {
 
-    private final BitSet visited = new BitSet(ForderRules.BOARD_COUNT);
-    private final List<Integer> sequence = new ArrayList<>();
+    private final Set<Long> visited = new HashSet<>();
+    private final List<Long> sequence = new ArrayList<>();
 
     public ForderHistory() {
         reset();
@@ -25,47 +25,45 @@ public final class ForderHistory {
     public void reset() {
         visited.clear();
         sequence.clear();
-        visited.set(ForderRules.START_BOARD);
+
+        visited.add(ForderRules.START_BOARD);
         sequence.add(ForderRules.START_BOARD);
     }
 
-    public boolean hasSeen(int board) {
-        return visited.get(board);
+    public boolean hasSeen(long board) {
+        return visited.contains(board);
     }
 
     /**
-     * Returns true if flipping this cell from currentBoard would obey the
+     * Returns true if flipping this cell from currentBoard obeys the
      * no-repeated-board rule.
      */
-    public boolean isLegalMove(int currentBoard, int cell) {
+    public boolean isLegalMove(long currentBoard, int cell) {
         if (ForderRules.isTerminal(currentBoard)) {
             return false;
         }
 
-        int next = ForderRules.flip(currentBoard, cell);
-        return !visited.get(next);
+        long next = ForderRules.flip(currentBoard, cell);
+        return !visited.contains(next);
     }
 
     /**
      * Records a board after a real move has been made.
-     * Throws if that board has already appeared in this game.
      */
-    public void recordBoard(int board) {
-        if (visited.get(board)) {
+    public void recordBoard(long board) {
+        if (!visited.add(board)) {
             throw new IllegalArgumentException(
                     "Illegal Forder move: board state has already occurred."
             );
         }
 
-        visited.set(board);
         sequence.add(board);
     }
 
     /**
-     * Convenience method: validate a move, record its resulting board, and
-     * return the new board integer.
+     * Validates a move, records its resulting board and returns the new board.
      */
-    public int playMove(int currentBoard, int cell) {
+    public long playMove(long currentBoard, int cell) {
         if (!isLegalMove(currentBoard, cell)) {
             throw new IllegalArgumentException(
                     "Illegal Forder move at cell " + cell
@@ -73,17 +71,17 @@ public final class ForderHistory {
             );
         }
 
-        int next = ForderRules.flip(currentBoard, cell);
+        long next = ForderRules.flip(currentBoard, cell);
         recordBoard(next);
         return next;
     }
 
-    /** Safe clone for AI search; the AI can mutate this copy while exploring. */
-    public BitSet copyVisited() {
-        return (BitSet) visited.clone();
+    /** Safe copy for AI search. */
+    public Set<Long> copyVisited() {
+        return new HashSet<>(visited);
     }
 
-    public List<Integer> sequence() {
+    public List<Long> sequence() {
         return Collections.unmodifiableList(sequence);
     }
 

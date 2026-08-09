@@ -7,86 +7,67 @@ package com.example.game;
  *   RIGHT / Red  = 1
  *   LEFT  / Blue = 0
  *
- * Cell numbering:
- *    0  1  2  3
- *    4  5  6  7
- *    8  9 10 11
- *   12 13 14 15
+ * The 8x8 board uses all 64 bits of a Java long.
  */
 public final class ForderRules {
 
-    public static final int ROWS = 4;
-    public static final int COLS = 4;
+    public static final int ROWS = 8;
+    public static final int COLS = 8;
     public static final int CELLS = ROWS * COLS;
-    public static final int BOARD_COUNT = 1 << CELLS;
 
     /**
-     * Official starting board:
+     * Official 8x8 starting board:
      *
-     * R R L L
-     * R R L L
-     * L L R R
-     * L L R R
+     * R R R R L L L L
+     * R R R R L L L L
+     * R R R R L L L L
+     * R R R R L L L L
+     * L L L L R R R R
+     * L L L L R R R R
+     * L L L L R R R R
+     * L L L L R R R R
      */
-    public static final int START_BOARD = 0xCC33;
+    public static final long START_BOARD = 0xF0F0F0F00F0F0F0FL;
 
-    private static final int[] ROW_MASKS = {
-            0x000F,
-            0x00F0,
-            0x0F00,
-            0xF000
-    };
-
-
-    private static final int[] COLUMN_MASKS = {
-            0x1111,
-            0x2222,
-            0x4444,
-            0x8888
-    };
+    private static final long[] ROW_MASKS = buildRowMasks();
+    private static final long[] COLUMN_MASKS = buildColumnMasks();
 
     private ForderRules() {
     }
 
     /** Returns the board obtained by flipping exactly one cell. */
-    public static int flip(int board, int cell) {
+    public static long flip(long board, int cell) {
         validateCell(cell);
-        return board ^ (1 << cell);
+        return board ^ (1L << cell);
     }
 
-    /**
-     * Kept for compatibility with any existing code/tests that specifically
-     * want to ask about horizontal rows.
-     */
-    public static boolean hasWinningRow(int board, Player player) {
+    public static boolean hasWinningRow(long board, Player player) {
         return hasCompleteLine(board, player, ROW_MASKS);
     }
 
-
-    public static boolean hasWinningColumn(int board, Player player) {
+    public static boolean hasWinningColumn(long board, Player player) {
         return hasCompleteLine(board, player, COLUMN_MASKS);
     }
 
-
-    public static boolean hasWinningLine(int board, Player player) {
+    public static boolean hasWinningLine(long board, Player player) {
         return hasWinningRow(board, player)
                 || hasWinningColumn(board, player);
     }
 
     private static boolean hasCompleteLine(
-            int board,
+            long board,
             Player player,
-            int[] masks
+            long[] masks
     ) {
-        for (int mask : masks) {
+        for (long mask : masks) {
             if (player == Player.RED) {
-                // Four RIGHT/Red cells => all four bits are 1.
+                // Eight RIGHT/Red cells => all eight bits in the line are 1.
                 if ((board & mask) == mask) {
                     return true;
                 }
             } else {
-                // Four LEFT/Blue cells => all four bits are 0.
-                if ((board & mask) == 0) {
+                // Eight LEFT/Blue cells => all eight bits in the line are 0.
+                if ((board & mask) == 0L) {
                     return true;
                 }
             }
@@ -97,12 +78,8 @@ public final class ForderRules {
 
     /**
      * Returns the winner on this board, or null when the board is non-terminal.
-     *
-     * A simultaneous Red and Blue win should not be reachable during normal
-     * play because play stops as soon as the first winning line appears.
      */
-    public static Player winner(int board) {
-
+    public static Player winner(long board) {
         boolean red = hasWinningLine(board, Player.RED);
         boolean blue = hasWinningLine(board, Player.BLUE);
 
@@ -124,7 +101,7 @@ public final class ForderRules {
         return null;
     }
 
-    public static boolean isTerminal(int board) {
+    public static boolean isTerminal(long board) {
         return winner(board) != null;
     }
 
@@ -138,14 +115,13 @@ public final class ForderRules {
         return cell % COLS;
     }
 
-    public static String boardToString(int board) {
+    public static String boardToString(long board) {
         StringBuilder out = new StringBuilder();
 
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
                 int cell = row * COLS + col;
-                boolean right = (board & (1 << cell)) != 0;
-
+                boolean right = (board & (1L << cell)) != 0L;
                 out.append(right ? 'R' : 'L');
 
                 if (col < COLS - 1) {
@@ -161,10 +137,44 @@ public final class ForderRules {
         return out.toString();
     }
 
+    private static long[] buildRowMasks() {
+        long[] masks = new long[ROWS];
+
+        for (int row = 0; row < ROWS; row++) {
+            long mask = 0L;
+
+            for (int col = 0; col < COLS; col++) {
+                int cell = row * COLS + col;
+                mask |= 1L << cell;
+            }
+
+            masks[row] = mask;
+        }
+
+        return masks;
+    }
+
+    private static long[] buildColumnMasks() {
+        long[] masks = new long[COLS];
+
+        for (int col = 0; col < COLS; col++) {
+            long mask = 0L;
+
+            for (int row = 0; row < ROWS; row++) {
+                int cell = row * COLS + col;
+                mask |= 1L << cell;
+            }
+
+            masks[col] = mask;
+        }
+
+        return masks;
+    }
+
     private static void validateCell(int cell) {
         if (cell < 0 || cell >= CELLS) {
             throw new IllegalArgumentException(
-                    "Cell must be in range 0..15: " + cell
+                    "Cell must be in range 0.." + (CELLS - 1) + ": " + cell
             );
         }
     }

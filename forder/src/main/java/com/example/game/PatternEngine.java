@@ -11,8 +11,7 @@ public final class PatternEngine {
             Cell[][] cells,
             Direction direction
     ) {
-
-        int board = ForderBoardConverter.encode(cells);
+        long board = ForderBoardConverter.encode(cells);
 
         Player player = direction == Direction.RIGHT
                 ? Player.RED
