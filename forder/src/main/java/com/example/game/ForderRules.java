@@ -18,16 +18,16 @@ public final class ForderRules {
     /**
      * Official 8x8 starting board:
      *
-     * R R R R L L L L
-     * R R R R L L L L
-     * R R R R L L L L
-     * R R R R L L L L
-     * L L L L R R R R
-     * L L L L R R R R
-     * L L L L R R R R
-     * L L L L R R R R
+        R R B B R R B B
+        R R B B R R B B
+        B B R R B B R R
+        B B R R B B R R
+        R R B B R R B B
+        R R B B R R B B
+        B B R R B B R R
+        B B R R B B R R
      */
-    public static final long START_BOARD = 0xF0F0F0F00F0F0F0FL;
+    public static final long START_BOARD = 0xCCCC3333CCCC3333L;
 
     private static final long[] ROW_MASKS = buildRowMasks();
     private static final long[] COLUMN_MASKS = buildColumnMasks();

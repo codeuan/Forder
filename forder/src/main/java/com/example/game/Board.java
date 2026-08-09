@@ -82,13 +82,12 @@ public class Board {
     }
 
     private Direction startingDirection(int row, int col) {
-        int halfway = boardSize / 2;
+        int blockRow = row / 2;
+        int blockCol = col / 2;
 
-        boolean top = row < halfway;
-        boolean left = col < halfway;
-
-        // Top-left and bottom-right quadrants are RIGHT/Red.
-        return top == left ? Direction.RIGHT : Direction.LEFT;
+        return (blockRow + blockCol) % 2 == 0
+                ? Direction.RIGHT
+                : Direction.LEFT;
     }
 
     private void handleCellClick(Cell cell) {

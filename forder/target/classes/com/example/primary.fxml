@@ -18,8 +18,12 @@
         <GridPane fx:id="boardGrid"
                   alignment="CENTER" />
 
-        <Button text="Play Again"
-                onAction="#handlePlayAgain" />
+        <Button
+            fx:id="playAgainButton"
+            text="Play Again"
+            onAction="#handlePlayAgain"
+            visible="false"
+            managed="false" />
 
 
     </children>

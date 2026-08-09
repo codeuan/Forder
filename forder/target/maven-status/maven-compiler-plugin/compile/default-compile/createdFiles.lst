@@ -1,6 +1,5 @@
 com\example\game\Board.class
 com\example\game\ForderAI.class
-com\example\game\ForderAITest.class
 com\example\PrimaryController.class
 com\example\game\ForderAI$SearchResult.class
 com\example\game\ForderAI$SearchTimeout.class
