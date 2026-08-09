@@ -9,17 +9,21 @@ Each player is assigned a colour: red or blue.
 The initial board is:
 
 ```text
-R R B B
-R R B B
-B B R R
-B B R R
+R R B B R R B B
+R R B B R R B B
+B B R R B B R R
+B B R R B B R R
+R R B B R R B B
+R R B B R R B B
+B B R R B B R R
+B B R R B B R R
 ```
 
 Players alternate turns.
 
 On a turn:
 
-1. Choose one of the 16 cells.
+1. Choose one of the 64 cells.
 2. Flip it to its opposite state.
 3. The resulting board must not have appeared previously in the game.
 4. If the move completes a winning row for either player, the game ends.
