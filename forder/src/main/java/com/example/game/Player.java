@@ -3,6 +3,7 @@ package com.example.game;
 import com.example.game.Cell.Direction;
 
 public enum Player {
+
     RED("Player 1", Direction.RIGHT),
     BLUE("Player 2", Direction.LEFT);
 
@@ -21,6 +22,7 @@ public enum Player {
     public Direction getDirection() {
         return direction;
     }
+
 
     public Player other() {
         return this == RED ? BLUE : RED;

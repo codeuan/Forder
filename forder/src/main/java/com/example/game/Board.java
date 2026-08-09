@@ -6,23 +6,26 @@ import javafx.scene.layout.GridPane;
 
 public class Board {
 
-    private static final Player HUMAN_PLAYER = Player.RED;
-    private static final Player AI_PLAYER = Player.BLUE;
-
-    private static final int AI_MAX_DEPTH = 8;
-    private static final long AI_TIME_LIMIT_MS = 500;
-
     private final GridPane boardGrid;
     private final int boardSize;
     private final int cellSize;
 
     private final Cell[][] cells;
 
+    // --- CHANGED: The GUI now uses the same Player values as the AI core. ---
+    private static final Player HUMAN_PLAYER = Player.RED;
+    private static final Player AI_PLAYER = Player.BLUE;
+
+    // --- CHANGED: Board now owns the real history and AI used during a game. ---
     private final ForderHistory history;
     private final ForderAI ai;
 
     private Player currentPlayer;
     private boolean gameOver;
+
+    // --- CHANGED: AI settings live in one obvious place. ---
+    private static final int AI_MAX_DEPTH = 8;
+    private static final long AI_TIME_LIMIT_MS = 500;
 
     private static final Direction[][] DEFAULT_BOARD = {
 
@@ -55,28 +58,34 @@ public class Board {
         }
     };
 
-    public Board(
-            GridPane boardGrid,
-            int boardSize,
-            int cellSize
-    ) {
+    public Board(GridPane boardGrid, int boardSize, int cellSize) {
+
+        // --- CHANGED: The AI/rules codec is specifically a 4x4 implementation. ---
+        if (boardSize != ForderRules.ROWS) {
+            throw new IllegalArgumentException(
+                    "Forder currently requires a 4x4 board."
+            );
+        }
+
         this.boardGrid = boardGrid;
         this.boardSize = boardSize;
         this.cellSize = cellSize;
 
-        cells = new Cell[boardSize][boardSize];
+        this.cells = new Cell[boardSize][boardSize];
 
-        history = new ForderHistory();
-        ai = new ForderAI(AI_PLAYER);
+        // --- CHANGED: Replaces the old Player objects and String/HashSet history. ---
+        this.history = new ForderHistory();
+        this.ai = new ForderAI(AI_PLAYER);
 
-        currentPlayer = HUMAN_PLAYER;
-        gameOver = false;
+        this.currentPlayer = HUMAN_PLAYER;
+        this.gameOver = false;
     }
 
     public void createBoard() {
 
         boardGrid.getChildren().clear();
 
+        // --- CHANGED: createBoard() now fully resets a game. ---
         gameOver = false;
         currentPlayer = HUMAN_PLAYER;
 
@@ -85,14 +94,14 @@ public class Board {
             for (int col = 0; col < boardSize; col++) {
 
                 Cell cell = new Cell(
-                        row,
-                        col,
-                        cellSize,
-                        DEFAULT_BOARD[row][col]
+                    row,
+                    col,
+                    cellSize,
+                    DEFAULT_BOARD[row][col]
                 );
 
                 cell.setOnMouseClicked(
-                        event -> handleCellClick(cell)
+                    event -> handleCellClick(cell)
                 );
 
                 cells[row][col] = cell;
@@ -101,26 +110,19 @@ public class Board {
             }
         }
 
+        // --- CHANGED: ForderHistory now owns repetition checking. ---
         history.reset();
 
-        /*
-         * This is useful while developing:
-         * make sure the graphical starting board and
-         * ForderRules.START_BOARD really agree.
-         */
-        int encodedBoard =
-                ForderBoardCodec.encode(cells);
+        // --- CHANGED: Sanity-check that the JavaFX board and bitboard agree. ---
+        int board = ForderBoardConverter.encode(cells);
 
-        if (encodedBoard != ForderRules.START_BOARD) {
+        if (board != ForderRules.START_BOARD) {
             throw new IllegalStateException(
-                    "GUI starting board does not match "
-                    + "ForderRules.START_BOARD."
+                    "GUI starting board does not match ForderRules.START_BOARD."
             );
         }
 
-        System.out.println(
-                HUMAN_PLAYER.getName() + "'s turn"
-        );
+        System.out.println(HUMAN_PLAYER.getName() + "'s turn");
     }
 
     private void handleCellClick(Cell cell) {
@@ -129,13 +131,12 @@ public class Board {
             return;
         }
 
-        /*
-         * Don't allow the human to move for the AI.
-         */
+        // --- CHANGED: Ignore clicks while it is the AI's turn. ---
         if (currentPlayer != HUMAN_PLAYER) {
             return;
         }
 
+        // --- CHANGED: Convert the clicked row/column into the AI's 0..15 cell index. ---
         int cellIndex =
                 cell.getRow() * ForderRules.COLS
                 + cell.getCol();
@@ -146,121 +147,92 @@ public class Board {
             return;
         }
 
+        // --- CHANGED: After a successful human move, hand the turn to the AI. ---
         currentPlayer = AI_PLAYER;
-
         makeAIMove();
     }
 
     /**
-     * Makes one real game move.
+     * Applies one real move to both representations of the game:
+     * the integer bitboard/history and the JavaFX Cell[][] board.
      *
-     * Used by BOTH the human and the AI.
+     * This is deliberately used for BOTH human and AI moves so the two paths
+     * cannot quietly develop different rules.
      */
     private boolean makeMove(int cellIndex) {
 
-        int currentBoard =
-                ForderBoardCodec.encode(cells);
+        int currentBoard = ForderBoardConverter.encode(cells);
 
-        /*
-         * Check the no-repeated-board rule.
-         */
-        if (!history.isLegalMove(
-                currentBoard,
-                cellIndex
-        )) {
-
+        // --- CHANGED: One shared repetition rule for human and AI moves. ---
+        if (!history.isLegalMove(currentBoard, cellIndex)) {
             System.out.println(
-                    "Illegal move: that would repeat "
-                    + "an earlier position."
+                    "Illegal move: that would repeat an earlier position."
             );
-
             return false;
         }
 
-        /*
-         * Update the logical game state.
-         */
-        int newBoard =
-                history.playMove(
-                        currentBoard,
-                        cellIndex
-                );
+        // Record the logical move first.
+        int newBoard = history.playMove(
+                currentBoard,
+                cellIndex
+        );
 
-        /*
-         * Update the JavaFX representation.
-         */
-        ForderBoardCodec.applyMove(
+        // --- CHANGED: ForderBoardConverter is now the bridge back to the JavaFX board. ---
+        ForderBoardConverter.applyMove(
                 cells,
                 cellIndex
         );
 
-        /*
-         * Development sanity check.
-         *
-         * After changing the GUI, it should encode
-         * to exactly the board that ForderHistory
-         * calculated.
-         */
-        int encodedBoard =
-                ForderBoardCodec.encode(cells);
+        // --- CHANGED: Catch any accidental desynchronisation immediately. ---
+        int encodedBoard = ForderBoardConverter.encode(cells);
 
         if (encodedBoard != newBoard) {
             throw new IllegalStateException(
-                    "GUI board and logical board "
-                    + "have become inconsistent."
+                    "GUI board and logical Forder board are out of sync."
             );
         }
 
-        Player winner =
-                ForderRules.winner(newBoard);
+        // --- CHANGED: Winner comes from ForderRules, which now checks rows + columns. ---
+        Player winner = ForderRules.winner(newBoard);
 
         if (winner != null) {
-
             gameOver = true;
 
             System.out.println(
                     winner.getName()
-                    + " wins as "
-                    + winner
+                    + " wins with "
+                    + winner.getDirection()
                     + "!"
             );
+
+            return true;
         }
 
         return true;
     }
 
+    // --- CHANGED: This is the actual connection between Board and ForderAI. ---
     private void makeAIMove() {
 
         if (gameOver) {
             return;
         }
 
-        int board =
-                ForderBoardCodec.encode(cells);
+        int board = ForderBoardConverter.encode(cells);
 
         System.out.println("AI is thinking...");
 
-        ForderAI.SearchResult result =
-                ai.chooseMove(
-                        board,
-                        history,
-                        AI_PLAYER,
-                        AI_MAX_DEPTH,
-                        AI_TIME_LIMIT_MS
-                );
+        ForderAI.SearchResult result = ai.chooseMove(
+                board,
+                history,
+                AI_PLAYER,
+                AI_MAX_DEPTH,
+                AI_TIME_LIMIT_MS
+        );
 
-        /*
-         * -1 means the AI couldn't find any
-         * legal remaining move.
-         */
         if (result.cell() < 0) {
-
             gameOver = true;
-
-            System.out.println(
-                    "No legal moves remain."
-            );
-
+            System.out.println("No legal moves remain.");
             return;
         }
 
@@ -283,23 +255,19 @@ public class Board {
                 + result.nodesSearched()
         );
 
-        boolean moveMade =
-                makeMove(result.cell());
+        boolean moveMade = makeMove(result.cell());
 
         if (!moveMade) {
             throw new IllegalStateException(
-                    "AI returned an illegal move: "
-                    + result.cell()
+                    "AI returned an illegal move: " + result.cell()
             );
         }
 
         if (!gameOver) {
-
             currentPlayer = HUMAN_PLAYER;
 
             System.out.println(
-                    HUMAN_PLAYER.getName()
-                    + "'s turn"
+                    HUMAN_PLAYER.getName() + "'s turn"
             );
         }
     }

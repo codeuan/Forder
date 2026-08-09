@@ -8,7 +8,6 @@ package com.example.game;
  *   LEFT  / Blue = 0
  *
  * Cell numbering:
- *
  *    0  1  2  3
  *    4  5  6  7
  *    8  9 10 11
@@ -21,18 +20,16 @@ public final class ForderRules {
     public static final int CELLS = ROWS * COLS;
     public static final int BOARD_COUNT = 1 << CELLS;
 
+    /**
+     * Official starting board:
+     *
+     * R R L L
+     * R R L L
+     * L L R R
+     * L L R R
+     */
     public static final int START_BOARD = 0xCC33;
 
-    /*
-     * Four horizontal lines:
-     *
-     * XXXX
-     * ....
-     * ....
-     * ....
-     *
-     * etc.
-     */
     private static final int[] ROW_MASKS = {
             0x000F,
             0x00F0,
@@ -40,16 +37,7 @@ public final class ForderRules {
             0xF000
     };
 
-    /*
-     * Four vertical lines:
-     *
-     * X...
-     * X...
-     * X...
-     * X...
-     *
-     * etc.
-     */
+
     private static final int[] COLUMN_MASKS = {
             0x1111,
             0x2222,
@@ -60,21 +48,29 @@ public final class ForderRules {
     private ForderRules() {
     }
 
+    /** Returns the board obtained by flipping exactly one cell. */
     public static int flip(int board, int cell) {
         validateCell(cell);
         return board ^ (1 << cell);
     }
 
     /**
-     * Returns true if the player owns any complete
-     * horizontal OR vertical line.
+     * Kept for compatibility with any existing code/tests that specifically
+     * want to ask about horizontal rows.
      */
-    public static boolean hasWinningLine(
-            int board,
-            Player player
-    ) {
-        return hasCompleteLine(board, player, ROW_MASKS)
-                || hasCompleteLine(board, player, COLUMN_MASKS);
+    public static boolean hasWinningRow(int board, Player player) {
+        return hasCompleteLine(board, player, ROW_MASKS);
+    }
+
+
+    public static boolean hasWinningColumn(int board, Player player) {
+        return hasCompleteLine(board, player, COLUMN_MASKS);
+    }
+
+
+    public static boolean hasWinningLine(int board, Player player) {
+        return hasWinningRow(board, player)
+                || hasWinningColumn(board, player);
     }
 
     private static boolean hasCompleteLine(
@@ -83,17 +79,13 @@ public final class ForderRules {
             int[] masks
     ) {
         for (int mask : masks) {
-
             if (player == Player.RED) {
-
-                // Red/RIGHT = 1
+                // Four RIGHT/Red cells => all four bits are 1.
                 if ((board & mask) == mask) {
                     return true;
                 }
-
             } else {
-
-                // Blue/LEFT = 0
+                // Four LEFT/Blue cells => all four bits are 0.
                 if ((board & mask) == 0) {
                     return true;
                 }
@@ -103,22 +95,29 @@ public final class ForderRules {
         return false;
     }
 
+    /**
+     * Returns the winner on this board, or null when the board is non-terminal.
+     *
+     * A simultaneous Red and Blue win should not be reachable during normal
+     * play because play stops as soon as the first winning line appears.
+     */
     public static Player winner(int board) {
 
-        boolean redWon = hasWinningLine(board, Player.RED);
-        boolean blueWon = hasWinningLine(board, Player.BLUE);
+        boolean red = hasWinningLine(board, Player.RED);
+        boolean blue = hasWinningLine(board, Player.BLUE);
 
-        if (redWon && blueWon) {
+        if (red && blue) {
             throw new IllegalStateException(
-                    "Board contains simultaneous RED and BLUE winning lines."
+                    "Board contains simultaneous RED and BLUE winning lines. "
+                            + "Define a tie rule if this is legal in Forder."
             );
         }
 
-        if (redWon) {
+        if (red) {
             return Player.RED;
         }
 
-        if (blueWon) {
+        if (blue) {
             return Player.BLUE;
         }
 
@@ -140,17 +139,12 @@ public final class ForderRules {
     }
 
     public static String boardToString(int board) {
-
         StringBuilder out = new StringBuilder();
 
         for (int row = 0; row < ROWS; row++) {
-
             for (int col = 0; col < COLS; col++) {
-
                 int cell = row * COLS + col;
-
-                boolean right =
-                        (board & (1 << cell)) != 0;
+                boolean right = (board & (1 << cell)) != 0;
 
                 out.append(right ? 'R' : 'L');
 
@@ -168,7 +162,6 @@ public final class ForderRules {
     }
 
     private static void validateCell(int cell) {
-
         if (cell < 0 || cell >= CELLS) {
             throw new IllegalArgumentException(
                     "Cell must be in range 0..15: " + cell

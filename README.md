@@ -52,7 +52,7 @@ r
 **`ForderHistory`**
 Tracks previously visited board states so that repetition can be prevented both during real play and simulated search.
 
-**`ForderBoardCodec`**
+**`ForderBoardConverter`**
 Provides conversion between the graphical board representation and the compact integer representation used by the AI.
 
 **`Board` / `Cell`**
