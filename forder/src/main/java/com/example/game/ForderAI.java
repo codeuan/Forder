@@ -19,7 +19,8 @@ import java.util.List;
 public final class ForderAI {
 
     private static final int WIN_SCORE = 1_000_000;
-    private static final int[] ROW_WEIGHTS = {0, 2, 18, 180, 0};
+    private static final int[] LINE_WEIGHTS =
+        {0, 2, 18, 180, 0};
 
     private final Player aiPlayer;
 
@@ -101,7 +102,7 @@ public final class ForderAI {
             int maxDepth,
             long timeLimitMillis
     ) {
-        if (playerToMove != aiPlayer) {
+        if (playerToMove != aiPlayer) { //if the AI is called when it is not its turn, throw an error.
             throw new IllegalArgumentException(
                     "This ForderAI plays " + aiPlayer
                             + " but chooseMove was called on " + playerToMove + "'s turn."
@@ -112,7 +113,7 @@ public final class ForderAI {
             throw new IllegalArgumentException("maxDepth must be at least 1.");
         }
 
-        Player existingWinner = ForderRules.winner(board);
+        Player existingWinner = ForderRules.winner(board); //check if the game has already been won.
         if (existingWinner != null) {
             return new SearchResult(-1, terminalScore(existingWinner, 0), 0, 0, false);
         }
@@ -122,7 +123,7 @@ public final class ForderAI {
 
         List<Integer> rootMoves = legalMoves(board, visited);
         if (rootMoves.isEmpty()) {
-            return new SearchResult(-1, 0, 0, 0, false);
+            return new SearchResult(-1, 0, 0, 0, false); 
         }
 
         // Always have a legal fallback even if a tiny time limit expires early.
@@ -232,14 +233,14 @@ public final class ForderAI {
             int beta
     ) {
         nodesSearched++;
-        checkTime();
+        checkTime(); //ensure we haven't run out of time.
 
         Player winner = ForderRules.winner(board);
         if (winner != null) {
             return terminalScore(winner, depth);
         }
 
-        List<Integer> moves = legalMoves(board, visited);
+        List<Integer> moves = legalMoves(board, visited); //obtain legal moves from this position.
 
         // No unused neighbouring board remains: treat as a draw.
         if (moves.isEmpty()) {
@@ -248,14 +249,14 @@ public final class ForderAI {
 
         if (depth == 0) {
             return evaluate(board, visited, playerToMove);
-        }
+        } //search-depth limit.
 
         orderMoves(moves, board, visited, playerToMove);
 
         if (playerToMove == aiPlayer) {
             int value = Integer.MIN_VALUE;
 
-            for (int cell : moves) {
+            for (int cell : moves) { //search down the branch of every legal move from here.
                 int next = ForderRules.flip(board, cell);
                 visited.set(next);
 
@@ -268,13 +269,13 @@ public final class ForderAI {
                                 depth - 1,
                                 alpha,
                                 beta
-                        )
+                        ) //try a move, then see what happens if the opponent plays the optimal response.
                 );
 
-                visited.clear(next);
+                visited.clear(next); 
 
                 alpha = Math.max(alpha, value);
-                if (alpha >= beta) {
+                if (alpha >= beta) { //if a branch can't give us a better score than what is guaranteed elsewhere, stop searching.
                     break;
                 }
             }
@@ -282,7 +283,7 @@ public final class ForderAI {
             return value;
 
         } else {
-            int value = Integer.MAX_VALUE;
+            int value = Integer.MAX_VALUE; //AI predicts what moves its opponent will choose that gives it the lowest score.
 
             for (int cell : moves) {
                 int next = ForderRules.flip(board, cell);
@@ -310,7 +311,7 @@ public final class ForderAI {
 
             return value;
         }
-    }
+    } //NOTE: this is hypothetical, it is not only run when it is the opponent's real world turn.
 
     /** Heuristic score from the AI's point of view. */
     private int evaluate(
@@ -369,7 +370,7 @@ public final class ForderAI {
         }
 
         return score;
-    }
+    } //rows are weighted based on how many pieces they have.
 
     /**
      * Counts legal single-cell flips that would immediately create a winning
@@ -424,7 +425,7 @@ public final class ForderAI {
     ) {
         Comparator<Integer> comparator = Comparator.comparingInt(
                 cell -> quickOrderingScore(board, visited, cell)
-        );
+        ); //comparison rule.
 
         if (playerToMove == aiPlayer) {
             comparator = comparator.reversed();
@@ -482,4 +483,63 @@ public final class ForderAI {
             throw SearchTimeout.INSTANCE;
         }
     }
+}
+
+private int positionalPotential(
+        int board,
+        Player player
+) {
+    int potential = 0;
+
+    /*
+     * Horizontal lines.
+     */
+    for (int row = 0; row < ForderRules.ROWS; row++) {
+
+        int redCount = 0;
+
+        for (int col = 0; col < ForderRules.COLS; col++) {
+
+            int cell =
+                    row * ForderRules.COLS + col;
+
+            if ((board & (1 << cell)) != 0) {
+                redCount++;
+            }
+        }
+
+        int playerCount =
+                player == Player.RED
+                ? redCount
+                : ForderRules.COLS - redCount;
+
+        potential += LINE_WEIGHTS[playerCount];
+    }
+
+    /*
+     * Vertical lines.
+     */
+    for (int col = 0; col < ForderRules.COLS; col++) {
+
+        int redCount = 0;
+
+        for (int row = 0; row < ForderRules.ROWS; row++) {
+
+            int cell =
+                    row * ForderRules.COLS + col;
+
+            if ((board & (1 << cell)) != 0) {
+                redCount++;
+            }
+        }
+
+        int playerCount =
+                player == Player.RED
+                ? redCount
+                : ForderRules.ROWS - redCount;
+
+        potential += LINE_WEIGHTS[playerCount];
+    }
+
+    return potential;
 }

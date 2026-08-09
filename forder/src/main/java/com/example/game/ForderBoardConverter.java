@@ -1,11 +1,15 @@
 package com.example.game;
 
 /**
- * Adapter between your existing Cell[][] JavaFX board and the AI's 16-bit board.
+ * Adapter between existing Cell[][] JavaFX board and the AI's 16-bit board.
  */
-public final class ForderBoardCodec {
 
-    private ForderBoardCodec() {
+//RIGHT = 1
+//LEFT = 0
+
+public final class ForderBoardConverter {
+
+    private ForderBoardConverter() {
     }
 
     public static int encode(Cell[][] cells) {
@@ -19,7 +23,7 @@ public final class ForderBoardCodec {
 
                 if (cells[row][col].getDirection() == Cell.Direction.RIGHT) {
                     board |= (1 << bit);
-                }
+                }//set right cells to 1 and left cells to 0.
             }
         }
 
